@@ -2,22 +2,22 @@ import { getDB } from "../config/dbConn";
 import { CourtroomRow } from "../types/courtroom";
 import { deleteFileRecord, getFileUrl } from "./fileHelper";
 
-const listCourtrooms = (): CourtroomRow[] => {
+const listCourtrooms = () => {
     const db = getDB();
     return db
-        .prepare<[], CourtroomRow>(
+        .prepare(
             `SELECT * FROM courtroom ORDER BY code ASC`
         )
-        .all();
+        .all() as unknown as CourtroomRow[];
 }
 
-const getCourtroomByCode = (code: string): CourtroomRow | undefined => {
+const getCourtroomByCode = (code: string) => {
     const db = getDB();
     return db
-        .prepare<[string], CourtroomRow>(
+        .prepare(
             `SELECT * FROM courtroom WHERE code = ?`
         )
-        .get(code);
+        .get(code) as CourtroomRow | undefined;
 }
 
 const courtroomExists = (code: string): boolean => {
@@ -33,11 +33,11 @@ const insertCourtroom = (code: string) => {
     ).run(code);
 }
 
-const deleteCourtroomByCode = async (code: string): Promise<number> => {
+const deleteCourtroomByCode = async (code: string) => {
     const db = getDB();
 
     const existing = db
-        .prepare<[string], { currentFileId: number | null }>(
+        .prepare(
             `SELECT currentFileId FROM courtroom WHERE code = ?`
         )
         .get(code);
@@ -45,7 +45,7 @@ const deleteCourtroomByCode = async (code: string): Promise<number> => {
     const result = db.prepare(`DELETE FROM courtroom WHERE code = ?`).run(code);
 
     if (result.changes > 0 && existing?.currentFileId != null) {
-        await deleteFileRecord(existing.currentFileId);
+        await deleteFileRecord(existing.currentFileId as number);
     }
 
     return result.changes;
@@ -55,7 +55,7 @@ const setCourtroomCurrentFileId = async (code: string, fileId: number | null) =>
     const db = getDB();
 
     const existing = db
-        .prepare<[string], { currentFileId: number | null }>(
+        .prepare(
             `SELECT currentFileId FROM courtroom WHERE code = ?`
         )
         .get(code);
@@ -65,7 +65,7 @@ const setCourtroomCurrentFileId = async (code: string, fileId: number | null) =>
     ).run(fileId, code);
 
     if (existing?.currentFileId != null) {
-        await deleteFileRecord(existing.currentFileId);
+        await deleteFileRecord(existing.currentFileId as number);
     }
 }
 

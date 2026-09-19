@@ -155,10 +155,10 @@ const createFileRecordFromPath = async (filePath: string, name: string, mimeType
 const getFileRecordById = (id: number) => {
     const db = getDB();
     return db
-        .prepare<[string], FileRow>(
+        .prepare(
             `SELECT * FROM file WHERE id = ?`
         )
-        .get(String(id));
+        .get(String(id)) as FileRow | undefined;
 }
 
 const getFileUrl = (id: number | null) => {
